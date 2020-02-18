@@ -1,0 +1,457 @@
+<!doctype html>
+<html amp lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed" rel="stylesheet">
+    <script async src="https://cdn.ampproject.org/v0.js"></script>
+    <script async custom-element="amp-video"
+      src="https://cdn.ampproject.org/v0/amp-video-0.1.js"></script>
+    <script async custom-element="amp-story"
+        src="https://cdn.ampproject.org/v0/amp-story-1.0.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script async src="./detour.js"></script>
+    <script async src="./chart.js"></script>
+    <title>Map Layer Testing</title>
+    <style>
+      .detour-container {
+        width: 100%;
+        height: 100%;
+      }
+      #detour-window {
+        font-family: Futura, sans-serif;
+        /*        margin-top: calc(var(--vh, 1vh) * 100); */      
+        height: 100vh;
+        height: calc(var(--vh, 1vh) * 100);
+        display: flex;
+        position: relative;
+        justify-content: center;
+        align-items: center;
+      }
+      #detour-master-container {
+        position: absolute;
+        background-color: #000;
+        height: calc(var(--vh, 1vh) * 100);
+        width: calc(var(--vw, 1vw) * 100);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow: hidden;
+        box-shadow: 0px 0px 20px 2px rgb(43, 43, 43);  
+      }
+      #detourMap { 
+        height: calc(var(--vh, 1vh) * 100);
+        width: calc(var(--vh, 1vh) * 135 * .5);
+        background: #5f5d5d;
+      }
+      #init-button {
+        margin-top: 50%;
+        font-size: 250%;
+        background: white;
+      }
+      .loader {
+        font-size: 10px;
+        margin: auto;
+        text-indent: -9999em;
+        width: 11em;
+        height: 11em;
+        border-radius: 50%;
+        background: #ffffff;
+        background: -moz-linear-gradient(left, #ffffff 10%, rgba(255, 255, 255, 0) 42%);
+        background: -webkit-linear-gradient(left, #ffffff 10%, rgba(255, 255, 255, 0) 42%);
+        background: -o-linear-gradient(left, #ffffff 10%, rgba(255, 255, 255, 0) 42%);
+        background: -ms-linear-gradient(left, #ffffff 10%, rgba(255, 255, 255, 0) 42%);
+        background: linear-gradient(to right, #ffffff 10%, rgba(255, 255, 255, 0) 42%);
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        -webkit-animation: load3 1.4s infinite linear;
+        animation: load3 1.4s infinite linear;
+        -webkit-transform: translateZ(0);
+        -ms-transform: translateZ(0);
+        transform: translateZ(0);
+      }
+      .loader:before {
+        width: 50%;
+        height: 50%;
+        background: #ffffff;
+        border-radius: 100% 0 0 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+        content: '';
+      }
+      .loader:after {
+        background: #000000;
+        width: 75%;
+        height: 75%;
+        border-radius: 50%;
+        content: '';
+        margin: auto;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+      }
+      .current.heat-map-image {
+        visibility:visible;
+      }
+      .heat-map-container {
+        margin-top: .5em;
+        position:relative;
+        height: calc(var(--vh, 1vh) * 30);
+      }
+      .heat-map-image {
+        visibility:hidden;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+      }
+
+      .heat-map-image img {
+        width: 100%;
+      }
+      @-webkit-keyframes load3 {
+        0% {
+          -webkit-transform: rotate(0deg);
+          transform: rotate(0deg);
+        }
+        100% {
+          -webkit-transform: rotate(360deg);
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes load3 {
+        0% {
+          -webkit-transform: rotate(0deg);
+          transform: rotate(0deg);
+        }
+        100% {
+          -webkit-transform: rotate(360deg);
+          transform: rotate(360deg);
+        }
+      }
+      /* MODAL Styles */
+      .sign-up-modal {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+        width: auto;
+        height: 99vh;
+        z-index: 100;
+        background: black;
+        color: white;
+        padding: 1em 1.5em;
+        -webkit-transition: opacity 2s;
+        -moz-transition: opacity 2s;
+        -o-transition: opacity 2s;
+        transition: opacity 2s;
+        opacity: 0;
+        visibility: hidden;
+      }
+      .inner-border {
+        border: 5px solid black;
+        box-shadow: inset 0px 0px 0px 4px white;
+        box-sizing: border-box;
+      }
+
+      .sign-up-modal.map-modal {
+        z-index: 1001;
+        height: fit-content;
+        max-height: 85vh;
+        padding: 2em;
+      }
+      .modal-info-button {
+        position: absolute;
+        cursor: pointer;
+        left: .7em;
+        top: 5.2em;
+        width: 24px;
+        height: 24px;
+        z-index: 1000;
+        background: white;
+        padding: 3px;
+        border: 2px solid rgba(0, 0, 0, 0.29);
+      }
+      .modal-close {
+        width: fit-content;
+        float: right;
+        cursor: pointer;
+        margin: -.5em;
+      }
+      .sign-up-modal.fade-in.fade-out{
+        opacity: 0;
+        position: absolute;
+      }
+      .sign-up-modal.fade-in {
+        opacity: 1;
+        visibility: visible; 
+      }
+      .iframe-master {
+        width: 100%;
+        height: 100%;
+      }
+      #year-header {
+        text-align: center;
+        font-size: 200%;
+        margin-bottom: 0;
+      }
+      #year-slider {
+        width: 85%;
+      }
+      .range-container{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .chart {
+        color: white;
+      }
+      .chart-master-container{
+        height: calc(var(--vh, 1vh) * 49);
+      }
+      .dataset-button {
+        width: 7em;
+        padding: .5em;
+        margin: .4em 1em;
+        background: white;
+        font-size: .75em;
+        font-family: Futura, sans-serif;
+        text-transform: uppercase;
+        font-weight: bold;
+      }
+      @media screen and (min-width: 1000px) { 
+        #detour-master-container {
+          margin: auto;
+          height: calc(var(--vh, 1vh) * 100);
+          width: calc(var(--vh, 1vh) * 135 * .45);
+        }
+        .modal-info-button {
+          left: .65em;
+        }
+        .layer-button {
+          width: 1em;
+          height: 1em;
+        }
+        .range-container{
+          margin-top: 1em;
+        }
+        #year-header {
+          font-size: 350%;
+          margin:0;
+        }
+        .dataset-button {
+          font-size: 1.25em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="detour-window">
+      <div id="detour-master-container">
+        <div class="detour-container chart">
+          <div class='heat-map-container'>
+            <div class='current heat-map-image' id='time_series_3_image_1960'>
+              <img alt='Time Series: 1960 to 2019, image#76' src='./images/globe/1960.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1961'>
+              <img alt='Time Series: 1960 to 2019, image#77' src='./images/globe/1961.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1962'>
+              <img alt='Time Series: 1960 to 2019, image#78' src='./images/globe/1962.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1963'>
+              <img alt='Time Series: 1960 to 2019, image#79' src='./images/globe/1963.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1964'>
+              <img alt='Time Series: 1960 to 2019, image#80' src='./images/globe/1964.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1965'>
+              <img alt='Time Series: 1960 to 2019, image#81' src='./images/globe/1965.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1966'>
+              <img alt='Time Series: 1960 to 2019, image#82' src='./images/globe/1966.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1967'>
+              <img alt='Time Series: 1960 to 2019, image#83' src='./images/globe/1967.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1968'>
+              <img alt='Time Series: 1960 to 2019, image#84' src='./images/globe/1968.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1969'>
+              <img alt='Time Series: 1960 to 2019, image#85' src='./images/globe/1969.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1970'>
+              <img alt='Time Series: 1960 to 2019, image#86' src='./images/globe/1970.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1971'>
+              <img alt='Time Series: 1960 to 2019, image#87' src='./images/globe/1971.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1972'>
+              <img alt='Time Series: 1960 to 2019, image#88' src='./images/globe/1972.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1973'>
+              <img alt='Time Series: 1960 to 2019, image#89' src='./images/globe/1973.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1974'>
+              <img alt='Time Series: 1960 to 2019, image#90' src='./images/globe/1974.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1975'>
+              <img alt='Time Series: 1960 to 2019, image#91' src='./images/globe/1975.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1976'>
+              <img alt='Time Series: 1960 to 2019, image#92' src='./images/globe/1976.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1977'>
+              <img alt='Time Series: 1960 to 2019, image#93' src='./images/globe/1977.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1978'>
+              <img alt='Time Series: 1960 to 2019, image#94' src='./images/globe/1978.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1979'>
+              <img alt='Time Series: 1960 to 2019, image#95' src='./images/globe/1979.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1980'>
+              <img alt='Time Series: 1960 to 2019, image#96' src='./images/globe/1980.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1981'>
+              <img alt='Time Series: 1960 to 2019, image#97' src='./images/globe/1981.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1982'>
+             <img alt='Time Series: 1960 to 2019, image#98' src='./images/globe/1982.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1983'>
+             <img alt='Time Series: 1960 to 2019, image#99' src='./images/globe/1983.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1984'>
+              <img alt='Time Series: 1960 to 2019, image#100' src='./images/globe/1984.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1985'>
+              <img alt='Time Series: 1960 to 2019, image#101' src='./images/globe/1985.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1986'>
+              <img alt='Time Series: 1960 to 2019, image#102' src='./images/globe/1986.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1987'>
+              <img alt='Time Series: 1960 to 2019, image#103' src='./images/globe/1987.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1988'>
+              <img alt='Time Series: 1960 to 2019, image#104' src='./images/globe/1988.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1989'>
+              <img alt='Time Series: 1960 to 2019, image#105' src='./images/globe/1989.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1990'>
+             <img alt='Time Series: 1960 to 2019, image#106' src='./images/globe/1990.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1991'>
+             <img alt='Time Series: 1960 to 2019, image#107' src='./images/globe/1991.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1992'>
+              <img alt='Time Series: 1960 to 2019, image#108' src='./images/globe/1992.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1993'>
+             <img alt='Time Series: 1960 to 2019, image#109' src='./images/globe/1993.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1994'>
+              <img alt='Time Series: 1960 to 2019, image#110' src='./images/globe/1994.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1995'>
+             <img alt='Time Series: 1960 to 2019, image#111' src='./images/globe/1995.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1996'>
+              <img alt='Time Series: 1960 to 2019, image#112' src='./images/globe/1996.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1997'>
+              <img alt='Time Series: 1960 to 2019, image#113' src='./images/globe/1997.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1998'>
+              <img alt='Time Series: 1960 to 2019, image#114' src='./images/globe/1998.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_1999'>
+              <img alt='Time Series: 1960 to 2019, image#115' src='./images/globe/1999.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2000'>
+              <img alt='Time Series: 1960 to 2019, image#116' src='./images/globe/2000.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2001'>
+              <img alt='Time Series: 1960 to 2019, image#117' src='./images/globe/2001.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2002'>
+              <img alt='Time Series: 1960 to 2019, image#118' src='./images/globe/2002.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2003'>
+              <img alt='Time Series: 1960 to 2019, image#119' src='./images/globe/2003.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2004'>
+              <img alt='Time Series: 1960 to 2019, image#120' src='./images/globe/2004.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2005'>
+              <img alt='Time Series: 1960 to 2019, image#121' src='./images/globe/2005.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2006'>
+              <img alt='Time Series: 1960 to 2019, image#122' src='./images/globe/2006.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2007'>
+              <img alt='Time Series: 1960 to 2019, image#123' src='./images/globe/2007.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2008'>
+              <img alt='Time Series: 1960 to 2019, image#124' src='./images/globe/2008.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2009'>
+             <img alt='Time Series: 1960 to 2019, image#125' src='./images/globe/2009.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2010'>
+              <img alt='Time Series: 1960 to 2019, image#126' src='./images/globe/2010.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2011'>
+              <img alt='Time Series: 1960 to 2019, image#127' src='./images/globe/2011.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2012'>
+              <img alt='Time Series: 1960 to 2019, image#128' src='./images/globe/2012.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2013'>
+             <img alt='Time Series: 1960 to 2019, image#129' src='./images/globe/2013.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2014'>
+              <img alt='Time Series: 1960 to 2019, image#130' src='./images/globe/2014.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2015'>
+             <img alt='Time Series: 1960 to 2019, image#131' src='./images/globe/2015.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2016'>
+              <img alt='Time Series: 1960 to 2019, image#132' src='./images/globe/2016.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2017'>
+              <img alt='Time Series: 1960 to 2019, image#133' src='./images/globe/2017.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2018'>
+              <img alt='Time Series: 1960 to 2019, image#134' src='./images/globe/2018.jpg'>
+            </div>
+            <div class='heat-map-image' id='time_series_3_image_2019'>
+              <img alt='Time Series: 1960 to 2019, image#135' src='./images/globe/2019.jpg'>
+            </div>
+          </div>
+          <div class="range-container">
+            <h1 id="year-header">1960</h1>
+            <input min="0" max="59" type="range" class="year-range" value="0" id="year-slider" oninput="handleYearChange(this.value)">
+            <div class="update-button-container">
+              <button class="dataset-button" onclick="handleDataSwitch(carbonDataset)">Carbon</button>
+              <button class="dataset-button" onclick="handleDataSwitch(sealevelDataset)">Sea Level</button>
+            </div>
+          </div>
+          <div class="chart-master-container"></div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
