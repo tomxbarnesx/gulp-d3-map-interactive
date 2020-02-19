@@ -100,9 +100,8 @@
         visibility:visible;
       }
       .heat-map-container {
-        margin-top: .5em;
         position:relative;
-        height: calc(var(--vh, 1vh) * 30);
+        height: calc(var(--vh, 1vh) * 34);
       }
       .heat-map-image {
         visibility:hidden;
@@ -202,7 +201,7 @@
       #year-header {
         text-align: center;
         font-size: 200%;
-        margin-bottom: 0;
+        margin: 0;
       }
       #year-slider {
         width: 85%;
@@ -217,23 +216,121 @@
         color: white;
       }
       .chart-master-container{
-        height: calc(var(--vh, 1vh) * 49);
+        height: calc(var(--vh, 1vh) * 42);
       }
       .dataset-button {
         width: 7em;
         padding: .5em;
-        margin: .4em 1em;
+        margin: .3em .6em;
         background: white;
         font-size: .75em;
         font-family: Futura, sans-serif;
         text-transform: uppercase;
         font-weight: bold;
       }
+      .dataset-button.active {
+        background: #bbbcbc;
+      }      
+      .dataset-button:active {
+        background: #a6a6a6;
+      }
+      .update-button-container {
+        margin-bottom: 1em;
+      }
+      input[type=range] {
+        -webkit-appearance: none;
+        width: 100%;
+        margin: 10.8px 0;
+      }
+      input[type=range]:focus {
+        outline: none;
+      }
+      input[type=range]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 8.4px;
+        cursor: pointer;
+        box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+        background: #ffffff;
+        border-radius: 1.3px;
+        border: 0.2px solid #010101;
+      }
+      input[type=range]::-webkit-slider-thumb {
+        box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+        border: 1px solid #000000;
+        height: 30px;
+        width: 16px;
+        border-radius: 0px;
+        background: #bbbcbc;
+        cursor: pointer;
+        -webkit-appearance: none;
+        margin-top: -11px;
+      }
+      input[type=range]:focus::-webkit-slider-runnable-track {
+        background: #ffffff;
+      }
+      input[type=range]::-moz-range-track {
+        width: 100%;
+        height: 8.4px;
+        cursor: pointer;
+        box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+        background: #ffffff;
+        border-radius: 1.3px;
+        border: 0.2px solid #010101;
+      }
+      input[type=range]::-moz-range-thumb {
+        box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+        border: 1px solid #000000;
+        height: 30px;
+        width: 16px;
+        border-radius: 0px;
+        background: #bbbcbc;
+        cursor: pointer;
+      }
+      input[type=range]::-ms-track {
+        width: 100%;
+        height: 8.4px;
+        cursor: pointer;
+        background: transparent;
+        border-color: transparent;
+        color: transparent;
+      }
+      input[type=range]::-ms-fill-lower {
+        background: #f2f2f2;
+        border: 0.2px solid #010101;
+        border-radius: 2.6px;
+        box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+      }
+      input[type=range]::-ms-fill-upper {
+        background: #ffffff;
+        border: 0.2px solid #010101;
+        border-radius: 2.6px;
+        box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+      }
+      input[type=range]::-ms-thumb {
+        box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+        border: 1px solid #000000;
+        height: 30px;
+        width: 16px;
+        border-radius: 0px;
+        background: #bbbcbc;
+        cursor: pointer;
+        height: 8.4px;
+      }
+      input[type=range]:focus::-ms-fill-lower {
+        background: #ffffff;
+      }
+      input[type=range]:focus::-ms-fill-upper {
+        background: #ffffff;
+      }
+
       @media screen and (min-width: 1000px) { 
         #detour-master-container {
           margin: auto;
           height: calc(var(--vh, 1vh) * 100);
           width: calc(var(--vh, 1vh) * 135 * .45);
+        }
+        .update-button-container {
+          margin-bottom: 1.5em;
         }
         .modal-info-button {
           left: .65em;
@@ -242,12 +339,8 @@
           width: 1em;
           height: 1em;
         }
-        .range-container{
-          margin-top: 1em;
-        }
         #year-header {
           font-size: 350%;
-          margin:0;
         }
         .dataset-button {
           font-size: 1.25em;
@@ -441,15 +534,15 @@
               <img alt='Time Series: 1960 to 2019, image#135' src='./images/globe/2019.jpg'>
             </div>
           </div>
+          <div class="chart-master-container"></div>
           <div class="range-container">
+            <div class="update-button-container">
+              <button class="dataset-button active" onclick="handleDataSwitch(carbonDataset, this)">Carbon</button>
+              <button class="dataset-button" onclick="handleDataSwitch(sealevelDataset, this)">Sea Level</button>
+            </div>
             <h1 id="year-header">1960</h1>
             <input min="0" max="59" type="range" class="year-range" value="0" id="year-slider" oninput="handleYearChange(this.value)">
-            <div class="update-button-container">
-              <button class="dataset-button" onclick="handleDataSwitch(carbonDataset)">Carbon</button>
-              <button class="dataset-button" onclick="handleDataSwitch(sealevelDataset)">Sea Level</button>
-            </div>
           </div>
-          <div class="chart-master-container"></div>
         </div>
       </div>
     </div>

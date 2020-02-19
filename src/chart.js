@@ -124,11 +124,11 @@ var carbonDataset = [
 	{ser1: 2019, ser2: 411.44},
 ];
 
-let init = false, activeDataset = carbonDataset, chartMaster = document.getElementsByClassName("chart-master-container")[0];
+let init = false, activeDataset = carbonDataset, chartMaster = document.getElementsByClassName("chart-master-container")[0], prevEl = document.getElementsByClassName("dataset-button")[0];
 
 var svgWidth = chartMaster.offsetWidth, 
 	svgHeight = chartMaster.offsetHeight,
-	margin = {top: 10, right: 15, bottom: 50, left: 60},
+	margin = {top: 10, right: 15, bottom: 30, left: 60},
     width = svgWidth - margin.left - margin.right,
     height = svgHeight - margin.top - margin.bottom;
 
@@ -154,11 +154,14 @@ var yAxis = d3.axisLeft().scale(y);
 svg.append("g")
   .attr("class","myYaxis")
 
-function handleDataSwitch(data) {
+function handleDataSwitch(data, el) {
 	if (activeDataset == data) {
 		return true
 	} else {
-		update(data, activeYearIndex);
+		prevEl.classList.remove("active");
+		el.classList.add("active");
+		prevEl=el;
+		return update(data, activeYearIndex);
 	}
 }
 
@@ -184,7 +187,7 @@ function update(data, index) {
 	// create the Y axis
 	if (data == sealevelDataset) {
 		y.domain([-85, d3.max(data, function(d) { return d.ser2  }) ]);
-		yLabel = "Change from '93-'08 avg. (mm)"
+		yLabel = "Change from est. avg. (mm)"
 	} else {
 		y.domain([225, d3.max(data, function(d) { return d.ser2  }) ]);
 		yLabel = "Atmospheric CO² (ppm)"
